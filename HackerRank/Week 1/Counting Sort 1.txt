@@ -1,0 +1,24 @@
+#include <stdio.h>
+#include <stdlib.h>
+int* countingSort(int arr_count, int* arr) {
+    static int f[100] = {0};  
+    for (int i = 0; i < arr_count; i++) {
+        f[arr[i]]++;
+    }
+    return f;
+}
+int main() {
+    int n;
+    scanf("%d", &n);
+    int* arr = malloc(n * sizeof(int));
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &arr[i]);
+    }
+    int* result = countingSort(n, arr);
+    for (int i = 0; i < 100; i++) {
+        printf("%d ", result[i]);
+    }
+    printf("\n");
+    free(arr);
+    return 0;
+}
