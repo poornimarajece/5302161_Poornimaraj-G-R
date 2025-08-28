@@ -1,0 +1,80 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+#define ALPHABET_SIZE 10 // letters 'a' to 'j'
+
+typedef struct TrieNode {
+    bool isEndOfWord;
+    struct TrieNode* children[ALPHABET_SIZE];
+} TrieNode;
+
+// Create a new trie node
+TrieNode* createNode() {
+    TrieNode* node = (TrieNode*) malloc(sizeof(TrieNode));
+    node->isEndOfWord = false;
+    for (int i = 0; i < ALPHABET_SIZE; i++)
+        node->children[i] = NULL;
+    return node;
+}
+
+// Insert a word into trie. Return true if a prefix problem is found.
+bool insert(TrieNode* root, char* word) {
+    TrieNode* node = root;
+    bool isPrefixProblem = false;
+
+    for (int i = 0; word[i] != '\0'; i++) {
+        int idx = word[i] - 'a';
+        if (node->children[idx] == NULL) {
+            node->children[idx] = createNode();
+        }
+        node = node->children[idx];
+
+        // If we reach a node that is already the end of a word
+        if (node->isEndOfWord)
+            isPrefixProblem = true;
+    }
+
+    // If the current word is a prefix of any existing word
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        if (node->children[i] != NULL)
+            isPrefixProblem = true;
+    }
+
+    node->isEndOfWord = true;
+
+    return isPrefixProblem;
+}
+
+void noPrefix(int words_count, char** words) {
+    TrieNode* root = createNode();
+    for (int i = 0; i < words_count; i++) {
+        if (insert(root, words[i])) {
+            printf("BAD SET\n");
+            printf("%s\n", words[i]);
+            return;
+        }
+    }
+    printf("GOOD SET\n");
+}
+
+int main() {
+    int n;
+    scanf("%d", &n);
+
+    char** words = malloc(n * sizeof(char*));
+    for (int i = 0; i < n; i++) {
+        words[i] = malloc(22 * sizeof(char)); // max length <= 21
+        scanf("%s", words[i]);
+    }
+
+    noPrefix(n, words);
+
+    // Free memory
+    for (int i = 0; i < n; i++)
+        free(words[i]);
+    free(words);
+
+    return 0;
+}
