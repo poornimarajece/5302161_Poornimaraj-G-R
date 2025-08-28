@@ -1,0 +1,94 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct {
+    int *data;
+    int size;
+    int capacity;
+} MinHeap;
+
+MinHeap* createHeap(int capacity) {
+    MinHeap* heap = (MinHeap*)malloc(sizeof(MinHeap));
+    heap->data = (int*)malloc(sizeof(int) * capacity);
+    heap->size = 0;
+    heap->capacity = capacity;
+    return heap;
+}
+
+void swap(int *a, int *b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void heapifyUp(MinHeap* heap, int index) {
+    while (index > 0 && heap->data[(index - 1) / 2] > heap->data[index]) {
+        swap(&heap->data[index], &heap->data[(index - 1) / 2]);
+        index = (index - 1) / 2;
+    }
+}
+
+void heapifyDown(MinHeap* heap, int index) {
+    int smallest = index;
+    int left = 2 * index + 1;
+    int right = 2 * index + 2;
+
+    if (left < heap->size && heap->data[left] < heap->data[smallest])
+        smallest = left;
+    if (right < heap->size && heap->data[right] < heap->data[smallest])
+        smallest = right;
+
+    if (smallest != index) {
+        swap(&heap->data[index], &heap->data[smallest]);
+        heapifyDown(heap, smallest);
+    }
+}
+
+void insertHeap(MinHeap* heap, int value) {
+    heap->data[heap->size++] = value;
+    heapifyUp(heap, heap->size - 1);
+}
+
+int extractMin(MinHeap* heap) {
+    if (heap->size == 0) return -1;
+    int minVal = heap->data[0];
+    heap->data[0] = heap->data[heap->size - 1];
+    heap->size--;
+    heapifyDown(heap, 0);
+    return minVal;
+}
+
+int cookies(int k, int A[], int n) {
+    MinHeap* heap = createHeap(n);
+    for (int i = 0; i < n; i++) {
+        insertHeap(heap, A[i]);
+    }
+
+    int operations = 0;
+    while (heap->size > 0 && heap->data[0] < k) {
+        if (heap->size < 2) {
+            return -1; // Not possible
+        }
+
+        int least = extractMin(heap);
+        int secondLeast = extractMin(heap);
+        int newCookie = least + 2 * secondLeast;
+        insertHeap(heap, newCookie);
+        operations++;
+    }
+
+    return operations;
+}
+
+int main() {
+    int n, k;
+    scanf("%d %d", &n, &k);
+    int A[n];
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &A[i]);
+    }
+
+    int result = cookies(k, A, n);
+    printf("%d\n", result);
+    return 0;
+}

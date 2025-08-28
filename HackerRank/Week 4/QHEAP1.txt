@@ -1,0 +1,148 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+// Min-heap implementation
+typedef struct {
+    int *arr;
+    int size;
+    int capacity;
+} MinHeap;
+
+MinHeap* createHeap(int capacity) {
+    MinHeap* heap = (MinHeap*)malloc(sizeof(MinHeap));
+    heap->arr = (int*)malloc(capacity * sizeof(int));
+    heap->size = 0;
+    heap->capacity = capacity;
+    return heap;
+}
+
+void swap(int *a, int *b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void ensureCapacity(MinHeap *heap) {
+    if (heap->size >= heap->capacity) {
+        heap->capacity *= 2;
+        heap->arr = realloc(heap->arr, heap->capacity * sizeof(int));
+    }
+}
+
+void heapifyUp(MinHeap *heap, int idx) {
+    while (idx > 0) {
+        int parent = (idx - 1) / 2;
+        if (heap->arr[parent] > heap->arr[idx]) {
+            swap(&heap->arr[parent], &heap->arr[idx]);
+            idx = parent;
+        } else break;
+    }
+}
+
+void heapifyDown(MinHeap *heap, int idx) {
+    while (2 * idx + 1 < heap->size) {
+        int left = 2 * idx + 1;
+        int right = 2 * idx + 2;
+        int smallest = idx;
+        if (left < heap->size && heap->arr[left] < heap->arr[smallest]) smallest = left;
+        if (right < heap->size && heap->arr[right] < heap->arr[smallest]) smallest = right;
+        if (smallest != idx) {
+            swap(&heap->arr[idx], &heap->arr[smallest]);
+            idx = smallest;
+        } else break;
+    }
+}
+
+void insertHeap(MinHeap *heap, int val) {
+    ensureCapacity(heap);
+    heap->arr[heap->size++] = val;
+    heapifyUp(heap, heap->size - 1);
+}
+
+int getMin(MinHeap *heap) {
+    return heap->arr[0];
+}
+
+void popHeap(MinHeap *heap) {
+    if (heap->size == 0) return;
+    heap->arr[0] = heap->arr[--heap->size];
+    heapifyDown(heap, 0);
+}
+
+// Simple hash table for presence (using chaining)
+typedef struct Node {
+    int key;
+    bool active;
+    struct Node *next;
+} Node;
+
+#define HASH_SIZE 100003
+
+Node* hashTable[HASH_SIZE];
+
+int hash(int key) {
+    if (key < 0) key = -key;
+    return key % HASH_SIZE;
+}
+
+void setActive(int key, bool active) {
+    int h = hash(key);
+    Node *cur = hashTable[h];
+    while (cur) {
+        if (cur->key == key) {
+            cur->active = active;
+            return;
+        }
+        cur = cur->next;
+    }
+    Node *newNode = (Node*)malloc(sizeof(Node));
+    newNode->key = key;
+    newNode->active = active;
+    newNode->next = hashTable[h];
+    hashTable[h] = newNode;
+}
+
+bool isActive(int key) {
+    int h = hash(key);
+    Node *cur = hashTable[h];
+    while (cur) {
+        if (cur->key == key) return cur->active;
+        cur = cur->next;
+    }
+    return false;
+}
+
+int main() {
+    int Q;
+    scanf("%d", &Q);
+
+    MinHeap *heap = createHeap(Q > 0 ? Q : 1);
+
+    while (Q--) {
+        int type;
+        scanf("%d", &type);
+
+        if (type == 1) {
+            int x;
+            scanf("%d", &x);
+            insertHeap(heap, x);
+            setActive(x, true);
+
+        } else if (type == 2) {
+            int x;
+            scanf("%d", &x);
+            setActive(x, false);
+
+        } else if (type == 3) {
+            while (heap->size > 0 && !isActive(getMin(heap))) {
+                popHeap(heap);
+            }
+            if (heap->size > 0) {
+                printf("%d\n", getMin(heap));
+            }
+        }
+    }
+
+    return 0;
+}
